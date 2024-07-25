@@ -21,6 +21,12 @@ jobs:
           pip install flet
           pip install -r requirements.txt
           
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.7.7'
+          channel: 'stable'
+          
       - name: Build Android app
         run: |
           flet build apk
