@@ -4,7 +4,7 @@ from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 from utilities import  create_button, create_section, create_info_section, create_scrollable_section
 from gemini_api import summarize_audio
-from notes_db import create_note
+from sqlite_db.notes_db import create_note
 
 def create_note_page(page, switch_page):
     # Navigation bar
