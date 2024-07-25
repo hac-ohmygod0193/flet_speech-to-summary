@@ -50,7 +50,7 @@ jobs:
             echo "pubspec.yaml not found, creating..."
             echo "dependencies:" > pubspec.yaml
             echo "  flet: ^0.23.2" >> pubspec.yaml
-            echo "  file_picker: ^5.2.0" >> pubspec.yaml
+            echo "  file_picker: ^8.0.5" >> pubspec.yaml
             echo "flutter:" >> pubspec.yaml
             echo "  uses-material-design: true" >> pubspec.yaml
           else
