@@ -13,13 +13,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.11'
+          
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev
           
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install wheel setuptools
           pip install flet
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
           
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -27,9 +39,37 @@ jobs:
           flutter-version: '3.19.0'
           channel: 'stable'
           
+      - name: Check Flutter installation
+        run: |
+          flutter --version
+          flutter doctor -v
+          
+      - name: Configure app for file selection
+        run: |
+          if [ ! -f pubspec.yaml ]; then
+            echo "pubspec.yaml not found, creating..."
+            echo "dependencies:" > pubspec.yaml
+            echo "  flet: ^0.23.2" >> pubspec.yaml
+            echo "  file_picker: ^5.2.0" >> pubspec.yaml
+            echo "flutter:" >> pubspec.yaml
+            echo "  uses-material-design: true" >> pubspec.yaml
+          else
+            echo "Updating existing pubspec.yaml..."
+            sed -i '/dependencies:/a\  file_picker: ^5.2.0' pubspec.yaml
+            sed -i '/flutter:/a\  uses-material-design: true' pubspec.yaml
+          fi
+          
+          if [ -f android/app/src/main/AndroidManifest.xml ]; then
+            echo "Updating AndroidManifest.xml..."
+            sed -i '/<manifest/a\    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>' android/app/src/main/AndroidManifest.xml
+            sed -i '/<manifest/a\    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>' android/app/src/main/AndroidManifest.xml
+          else
+            echo "AndroidManifest.xml not found. Make sure your project structure is correct."
+          fi
+
       - name: Build Android app
         run: |
-          flet build apk
+          flet build apk --verbose
         
       - name: Upload APK
         uses: actions/upload-artifact@v3
