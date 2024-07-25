@@ -1,4 +1,5 @@
 name: Build Android APK
+
 on:
   push:
     branches: [ main ]
@@ -9,41 +10,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          
+
+      - name: Update Pip
+        run: |
+          python -m pip install --upgrade pip
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev \
             pkg-config libcairo2-dev libgirepository1.0-dev cmake
-          
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-          
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
           channel: 'stable'
-          
+
       - name: Check Flutter installation
         run: |
           flutter --version
           flutter doctor -v
-          
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install flet
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        
+
       - name: Configure app for file selection
         run: |
           if [ ! -f pubspec.yaml ]; then
@@ -55,10 +60,10 @@ jobs:
             echo "  uses-material-design: true" >> pubspec.yaml
           else
             echo "Updating existing pubspec.yaml..."
-            sed -i '/dependencies:/a\  file_picker: ^5.2.0' pubspec.yaml
+            sed -i '/dependencies:/a\  file_picker: ^8.0.5' pubspec.yaml
             sed -i '/flutter:/a\  uses-material-design: true' pubspec.yaml
           fi
-          
+
           if [ -f android/app/src/main/AndroidManifest.xml ]; then
             echo "Updating AndroidManifest.xml..."
             sed -i '/<manifest/a\    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>' android/app/src/main/AndroidManifest.xml
@@ -69,9 +74,8 @@ jobs:
 
       - name: Build Android app
         run: |
-          export PATH="$PATH:/usr/lib/x86_64-linux-gnu/pkgconfig"
-          flet build apk --verbose
-        
+          flutter build apk --release --verbose
+
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
